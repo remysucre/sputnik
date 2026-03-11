@@ -1,3 +1,5 @@
+# `s@`: social networking over static sites
+
 ## Quick start
 
 1. Fork [this repo](https://github.com/remysucre/satellite) (see below if you need a different name from `satellite`)
