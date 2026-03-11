@@ -85,8 +85,8 @@ async function bootstrap() {
         public_key: pk,
       }),
     ],
-    ['sat/follows/index.json', JSON.stringify({ follows: [] })],
-    ['sat/posts/index.json', JSON.stringify({ posts: [] })],
+    ['follows/index.json', JSON.stringify({ follows: [] })],
+    ['posts/index.json', JSON.stringify({ posts: [] })],
   ];
 
   for (const [path, content] of files) {
@@ -242,7 +242,7 @@ window.submitPost = async function () {
     await github.pushBinaryFile(
       token,
       repo,
-      `sat/posts/${id}.json.enc`,
+      `posts/${id}.json.enc`,
       encrypted
     );
 
@@ -257,7 +257,7 @@ window.submitPost = async function () {
     await github.pushTextFile(
       token,
       repo,
-      'sat/posts/index.json',
+      'posts/index.json',
       JSON.stringify(index)
     );
 
@@ -295,7 +295,7 @@ window.doFollow = async function () {
     await github.pushTextFile(
       token,
       repo,
-      `sat/keys/${target}.json`,
+      `keys/${target}.json`,
       JSON.stringify(envelope)
     );
 
@@ -312,7 +312,7 @@ window.doFollow = async function () {
     await github.pushTextFile(
       token,
       repo,
-      'sat/follows/index.json',
+      'follows/index.json',
       JSON.stringify(list)
     );
 
@@ -353,7 +353,7 @@ window.doUnfollow = async function (target) {
     for (const postId of index.posts) {
       try {
         const resp = await fetch(
-          `https://${domain}/satellite/sat/posts/${postId}.json.enc`
+          `https://${domain}/satellite/posts/${postId}.json.enc`
         );
         if (!resp.ok) continue;
         const encrypted = new Uint8Array(await resp.arrayBuffer());
@@ -362,7 +362,7 @@ window.doUnfollow = async function (target) {
         await github.pushBinaryFile(
           token,
           repo,
-          `sat/posts/${postId}.json.enc`,
+          `posts/${postId}.json.enc`,
           reEncrypted
         );
       } catch (e) {
@@ -392,7 +392,7 @@ window.doUnfollow = async function (target) {
         await github.pushTextFile(
           token,
           repo,
-          `sat/keys/${follower}.json`,
+          `keys/${follower}.json`,
           JSON.stringify(envelope)
         );
       } catch (e) {
@@ -403,7 +403,7 @@ window.doUnfollow = async function (target) {
     await github.pushTextFile(
       token,
       repo,
-      'sat/follows/index.json',
+      'follows/index.json',
       JSON.stringify(list)
     );
 
@@ -436,7 +436,7 @@ window.doReply = async function (postId, postAuthor) {
     await github.pushBinaryFile(
       token,
       repo,
-      `sat/posts/${id}.json.enc`,
+      `posts/${id}.json.enc`,
       encrypted
     );
 
@@ -450,7 +450,7 @@ window.doReply = async function (postId, postAuthor) {
     await github.pushTextFile(
       token,
       repo,
-      'sat/posts/index.json',
+      'posts/index.json',
       JSON.stringify(index)
     );
 
@@ -480,7 +480,7 @@ window.doRepost = async function (postId, postAuthor) {
     await github.pushBinaryFile(
       token,
       repo,
-      `sat/posts/${id}.json.enc`,
+      `posts/${id}.json.enc`,
       encrypted
     );
 
@@ -494,7 +494,7 @@ window.doRepost = async function (postId, postAuthor) {
     await github.pushTextFile(
       token,
       repo,
-      'sat/posts/index.json',
+      'posts/index.json',
       JSON.stringify(index)
     );
 

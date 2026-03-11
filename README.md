@@ -80,15 +80,15 @@ When the user unfollows someone:
 
 When Bob visits Alice's site:
 1. Fetch Alice's `/satellite/satproto.json` to get her public key
-2. Fetch `sat/keys/bob.example.com.json`
+2. Fetch `keys/bob.example.com.json`
 3. Decrypt the content key using Bob's private key
-4. Fetch `sat/posts/index.json` to get the list of post IDs
-5. Fetch and decrypt individual posts from `sat/posts/{id}.json.enc`
+4. Fetch `posts/index.json` to get the list of post IDs
+5. Fetch and decrypt individual posts from `posts/{id}.json.enc`
 
 ## Data Schema
 
 Each post is stored as an individually encrypted file. The post index
-(`sat/posts/index.json`) is a plaintext JSON file listing post IDs
+(`posts/index.json`) is a plaintext JSON file listing post IDs
 newest-first, allowing clients to lazily load only recent posts.
 
 A post object:
@@ -128,7 +128,7 @@ The follow list is stored as a plain JSON file (unencrypted, since the key
 envelopes already reveal follows):
 
 ```
-GET https://{domain}/sat/follows/index.json
+GET https://{domain}/satellite/follows/index.json
 ```
 
 ```json
@@ -160,8 +160,8 @@ When viewing a post, the client scans followed users' posts for entries where
 The client publishes posts by:
 1. Creating a new post with a unique ID
 2. Encrypting the post JSON with the content key
-3. Pushing the encrypted post as `sat/posts/{id}.json.enc` via the GitHub Contents API
-4. Updating `sat/posts/index.json` to include the new post ID
+3. Pushing the encrypted post as `posts/{id}.json.enc` via the GitHub Contents API
+4. Updating `posts/index.json` to include the new post ID
 
 The GitHub OAuth token is stored in localStorage alongside the private key.
 
@@ -170,14 +170,13 @@ The GitHub OAuth token is stored in localStorage alongside the private key.
 ```
 {domain}/satellite/
   satproto.json             # Discovery + profile + public key
-  sat/
-    posts/
-      index.json            # Post ID list (plaintext, newest first)
-      {id}.json.enc         # Individually encrypted post files
-    follows/
-      index.json            # Follow list (unencrypted)
-    keys/
-      {domain}.json         # Encrypted content key per follower
+  posts/
+    index.json              # Post ID list (plaintext, newest first)
+    {id}.json.enc           # Individually encrypted post files
+  follows/
+    index.json              # Follow list (unencrypted)
+  keys/
+    {domain}.json           # Encrypted content key per follower
 ```
 
 ## Setup
@@ -199,15 +198,6 @@ The protocol itself is agnostic to how the site is hosted,
 2. Enable [GitHub Pages](https://docs.github.com/en/pages/getting-started-with-github-pages/creating-a-github-pages-site) on the repo (use deploy from the `main` branch)
 3. Visit the GitHub Pages URL (e.g. `https://username.github.io/satellite/`)
 
-### Following someone
-
-Enter their domain in the follow input and click **Follow**. This:
-- Fetches their public key from their `/satellite/satproto.json`
-- Encrypts your content key for them (so they can read your posts)
-- Updates your follow list
-
-After GitHub Pages propagates (~1 min), refresh to see their posts in your feed.
-
 ### Using a custom repo name
 
 By default, the client looks for data at `https://{domain}/satellite/`.
@@ -216,10 +206,5 @@ file to the root of your main site (e.g. the `username.github.io` repo)
 pointing to the actual repo:
 
 ```json
-{
-  "sat_repo": "my-custom-repo"
-}
+{ "sat_repo": "my-custom-repo" }
 ```
-
-The client checks `https://{domain}/satellite.json` first. If not found,
-it falls back to the default `https://{domain}/satellite/satproto.json`.

@@ -31,10 +31,10 @@ export async function fetchProfile(domain) {
   return profile;
 }
 
-// Get the base URL for a user's sat data (e.g. "https://alice.com/satellite/sat")
+// Get the base URL for a user's sat data (e.g. "https://alice.com/satellite")
 async function getSatRoot(domain) {
   const { profile, repo } = await resolve(domain);
-  return { base: `https://${domain}/${repo}/sat`, profile };
+  return { base: `https://${domain}/${repo}`, profile };
 }
 
 export async function fetchFollowList(domain) {
