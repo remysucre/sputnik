@@ -2,48 +2,80 @@
 
 import * as crypto from './crypto.js';
 
+const DEFAULT_BASE = 'satellite';
+
+// Resolve which repo a user's data lives in, then fetch their profile.
+// Tries /satellite/ first. Falls back to /satproto.json at the root,
+// which may contain {"sat_repo": "custom-name"} pointing elsewhere.
+async function resolve(domain) {
+  const primary = await fetch(`https://${domain}/${DEFAULT_BASE}/satproto.json`);
+  if (primary.ok) {
+    return { profile: await primary.json(), repo: DEFAULT_BASE };
+  }
+  const redirect = await fetch(`https://${domain}/satellite.json`);
+  if (redirect.ok) {
+    const data = await redirect.json();
+    if (data.sat_repo) {
+      const real = await fetch(`https://${domain}/${data.sat_repo}/satproto.json`);
+      if (real.ok) {
+        return { profile: await real.json(), repo: data.sat_repo };
+      }
+    }
+  }
+  throw new Error(`Profile not found for ${domain}`);
+}
 
 export async function fetchProfile(domain) {
-  const resp = await fetch(`https://${domain}/satproto.json`);
-  if (!resp.ok) throw new Error(`Profile not found for ${domain}`);
-  return resp.json();
+  const { profile } = await resolve(domain);
+  return profile;
+}
+
+// Get the base URL for a user's sat data (e.g. "https://alice.com/satellite/sat")
+async function getSatRoot(domain) {
+  const { profile, repo } = await resolve(domain);
+  return { base: `https://${domain}/${repo}/sat`, profile };
 }
 
 export async function fetchFollowList(domain) {
-  const resp = await fetch(`https://${domain}/sat/follows/index.json`);
+  const { base } = await getSatRoot(domain);
+  const resp = await fetch(`${base}/follows/index.json`);
   if (!resp.ok) throw new Error(`Follow list not found for ${domain}`);
   return resp.json();
 }
 
 export async function fetchPostIndex(domain) {
-  const resp = await fetch(`https://${domain}/sat/posts/index.json`);
+  const { base } = await getSatRoot(domain);
+  const resp = await fetch(`${base}/posts/index.json`);
   if (!resp.ok) throw new Error(`Post index not found for ${domain}`);
   return resp.json();
 }
 
-async function fetchKeyEnvelope(domain, myDomain, mySecret) {
-  const resp = await fetch(`https://${domain}/sat/keys/${myDomain}.json`);
-  if (!resp.ok) throw new Error(`No key envelope from ${domain} for ${myDomain}`);
+async function fetchKeyEnvelope(satBase, myDomain, mySecret) {
+  const resp = await fetch(`${satBase}/keys/${myDomain}.json`);
+  if (!resp.ok) throw new Error(`No key envelope for ${myDomain}`);
   const envelope = await resp.json();
   const sealed = crypto.fromBase64(envelope.encrypted_key);
   return crypto.openContentKey(sealed, mySecret);
 }
 
-async function fetchPost(domain, postId, contentKey) {
-  const resp = await fetch(`https://${domain}/sat/posts/${postId}.json.enc`);
-  if (!resp.ok) throw new Error(`Post ${postId} not found on ${domain}`);
+async function fetchPost(satBase, postId, contentKey) {
+  const resp = await fetch(`${satBase}/posts/${postId}.json.enc`);
+  if (!resp.ok) throw new Error(`Post ${postId} not found`);
   const encrypted = new Uint8Array(await resp.arrayBuffer());
   const decrypted = crypto.decryptData(encrypted, contentKey);
   return JSON.parse(new TextDecoder().decode(decrypted));
 }
 
 export async function fetchUserPosts(domain, myDomain, mySecret, limit = 50) {
-  const contentKey = await fetchKeyEnvelope(domain, myDomain, mySecret);
-  const index = await fetchPostIndex(domain);
+  const { base } = await getSatRoot(domain);
+  const contentKey = await fetchKeyEnvelope(base, myDomain, mySecret);
+  const resp = await fetch(`${base}/posts/index.json`);
+  if (!resp.ok) throw new Error(`Post index not found for ${domain}`);
+  const index = await resp.json();
   const posts = [];
   for (const postId of index.posts.slice(0, limit)) {
     try {
-      posts.push(await fetchPost(domain, postId, contentKey));
+      posts.push(await fetchPost(base, postId, contentKey));
     } catch (e) {
       console.warn(`Failed to fetch post ${postId} from ${domain}:`, e);
     }

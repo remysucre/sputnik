@@ -83,7 +83,6 @@ async function bootstrap() {
         display_name: domain,
         bio: '',
         public_key: pk,
-        sat_root: '/sat/',
       }),
     ],
     ['sat/follows/index.json', JSON.stringify({ follows: [] })],
@@ -381,7 +380,7 @@ window.doUnfollow = async function (target) {
     for (const postId of index.posts) {
       try {
         const resp = await fetch(
-          `https://${domain}/sat/posts/${postId}.json.enc`
+          `https://${domain}/satellite/sat/posts/${postId}.json.enc`
         );
         if (!resp.ok) continue;
         const encrypted = new Uint8Array(await resp.arrayBuffer());
