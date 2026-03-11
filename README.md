@@ -1,9 +1,9 @@
 # `s@`: social networking over static sites
 
 ```
-      Simple  *
-      Static  *  Social Networking
-Self-reliant  *
+      simple  *
+      static  *  social Networking
+self-reliant  *
 ```
 
 ## Quick start
