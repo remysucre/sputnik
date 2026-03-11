@@ -161,6 +161,20 @@ async function refreshFeed() {
     }
 
     const merged = feed.mergeFeed(postArrays);
+
+    // Resolve reposts: fetch original post content
+    for (const post of merged) {
+      if (!post.repost_of) continue;
+      try {
+        const original = await feed.fetchSinglePost(
+          post.repost_of_author, post.repost_of, domain, sk
+        );
+        post._original = original;
+      } catch {
+        post._original = null;
+      }
+    }
+
     renderFeed(merged);
     setStatus(
       merged.length
@@ -181,14 +195,28 @@ function renderFeed(posts) {
 
     let html = '';
     if (post.repost_of) {
-      html += `<div class="repost-label">reposted from ${escHtml(post.repost_of_author)}</div>`;
+      html += `<div class="repost-label">${escHtml(post.author)} reposted</div>`;
+      if (post.text) {
+        html += `<div class="post-text">${escHtml(post.text)}</div>`;
+      }
+      if (post._original) {
+        const orig = post._original;
+        html += `<div class="repost-content">`;
+        html += `<span class="post-author">${escHtml(orig.author)}</span>`;
+        html += `<span class="post-time">${new Date(orig.created_at).toLocaleString()}</span>`;
+        html += `<div class="post-text">${escHtml(orig.text)}</div>`;
+        html += `</div>`;
+      } else {
+        html += `<div class="repost-content unavailable">You don't have access to ${escHtml(post.repost_of_author)}'s posts — you may need to follow each other first.</div>`;
+      }
+    } else {
+      if (post.reply_to) {
+        html += `<div class="reply-label">replying to ${escHtml(post.reply_to_author)}</div>`;
+      }
+      html += `<span class="post-author">${escHtml(post.author)}</span>`;
+      html += `<span class="post-time">${new Date(post.created_at).toLocaleString()}</span>`;
+      html += `<div class="post-text">${escHtml(post.text)}</div>`;
     }
-    if (post.reply_to) {
-      html += `<div class="reply-label">replying to ${escHtml(post.reply_to_author)}</div>`;
-    }
-    html += `<span class="post-author">${escHtml(post.author)}</span>`;
-    html += `<span class="post-time">${new Date(post.created_at).toLocaleString()}</span>`;
-    html += `<div class="post-text">${escHtml(post.text)}</div>`;
     html += `<div class="post-actions">`;
     html += `<button onclick="doReply('${escAttr(post.id)}','${escAttr(post.author)}')">reply</button>`;
     html += `<button onclick="doRepost('${escAttr(post.id)}','${escAttr(post.author)}')">repost</button>`;
@@ -574,19 +602,21 @@ window.doRepost = async function (postId, postAuthor) {
 
 function updateTokenLink() {
   const username = document.getElementById('username-input').value.trim();
-  const link = document.getElementById('token-link');
+  const hint = document.getElementById('token-hint');
   if (!username) {
-    link.style.display = 'none';
+    hint.style.display = 'none';
     return;
   }
   const repoName = getRepoName();
   const params = new URLSearchParams({
-    name: 'Satellite',
-    description: `Select "Only select repositories" → ${repoName}, then grant Contents read/write.`,
+    name: 'sAT Proto',
+    description: `Choose "Only select repositories" > Select "${repoName}" > Click "Add permissions" > Choose "Contents" > Set "Access: Read and write"`,
     target_name: username,
   });
-  link.href = `https://github.com/settings/personal-access-tokens/new?${params}`;
-  link.style.display = '';
+  document.getElementById('token-link').href =
+    `https://github.com/settings/personal-access-tokens/new?${params}`;
+  document.getElementById('repo-hint').textContent = repoName;
+  hint.style.display = '';
 }
 
 async function start() {

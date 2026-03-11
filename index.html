@@ -16,7 +16,10 @@
   <div id="setup-panel">
     <label for="username-input">GitHub username</label>
     <input type="text" id="username-input" placeholder="username">
-    <a id="token-link" href="#" target="_blank" style="display:none;">Generate token on GitHub</a>
+    <div id="token-hint" style="display:none;">
+      <a id="token-link" href="#" target="_blank">Generate token on GitHub</a>
+      <br>Select the <code id="repo-hint"></code> repo and grant <code>Contents read/write</code> access.
+    </div>
 
     <label for="token-input">GitHub token</label>
     <input type="password" id="token-input" placeholder="github_pat_...">
