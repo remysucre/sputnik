@@ -163,13 +163,13 @@ async function refreshFeed() {
 
     const merged = feed.mergeFeed(postArrays);
 
-    // Resolve reposts and replies: fetch referenced post content
+    // Resolve replies: fetch parent post content
     for (const post of merged) {
-      const refAuthor = post.repost_of_author || post.reply_to_author;
-      const refId = post.repost_of || post.reply_to;
-      if (!refId) continue;
+      if (!post.reply_to) continue;
       try {
-        post._ref = await feed.fetchSinglePost(refAuthor, refId, domain, sk);
+        post._ref = await feed.fetchSinglePost(
+          post.reply_to_author, post.reply_to, domain, sk
+        );
       } catch {
         post._ref = null;
       }
@@ -194,39 +194,22 @@ function renderFeed(posts) {
     div.className = 'post';
 
     let html = '';
-    if (post.repost_of) {
-      html += `<div class="repost-label">${escHtml(post.author)} reposted</div>`;
-      if (post.text) {
-        html += `<div class="post-text">${escHtml(post.text)}</div>`;
-      }
+    if (post.reply_to) {
       if (post._ref) {
-        html += `<div class="repost-content">`;
+        html += `<div class="reply-parent">`;
         html += `<span class="post-author">${escHtml(post._ref.author)}</span>`;
         html += `<span class="post-time">${new Date(post._ref.created_at).toLocaleString()}</span>`;
         html += `<div class="post-text">${escHtml(post._ref.text)}</div>`;
         html += `</div>`;
       } else {
-        html += `<div class="repost-content unavailable">You don't have access to ${escHtml(post.repost_of_author)}'s posts — you may need to follow each other first.</div>`;
+        html += `<div class="reply-parent unavailable">You don't have access to ${escHtml(post.reply_to_author)}'s posts — you may need to follow each other first.</div>`;
       }
-    } else {
-      if (post.reply_to) {
-        if (post._ref) {
-          html += `<div class="reply-parent">`;
-          html += `<span class="post-author">${escHtml(post._ref.author)}</span>`;
-          html += `<span class="post-time">${new Date(post._ref.created_at).toLocaleString()}</span>`;
-          html += `<div class="post-text">${escHtml(post._ref.text)}</div>`;
-          html += `</div>`;
-        } else {
-          html += `<div class="reply-parent unavailable">You don't have access to ${escHtml(post.reply_to_author)}'s posts — you may need to follow each other first.</div>`;
-        }
-      }
-      html += `<span class="post-author">${escHtml(post.author)}</span>`;
-      html += `<span class="post-time">${new Date(post.created_at).toLocaleString()}</span>`;
-      html += `<div class="post-text">${escHtml(post.text)}</div>`;
     }
+    html += `<span class="post-author">${escHtml(post.author)}</span>`;
+    html += `<span class="post-time">${new Date(post.created_at).toLocaleString()}</span>`;
+    html += `<div class="post-text">${escHtml(post.text)}</div>`;
     html += `<div class="post-actions">`;
     html += `<button onclick="doReply('${escAttr(post.id)}','${escAttr(post.author)}')">reply</button>`;
-    html += `<button onclick="doRepost('${escAttr(post.id)}','${escAttr(post.author)}')">repost</button>`;
     html += `</div>`;
 
     div.innerHTML = html;
@@ -561,49 +544,6 @@ window.doReply = async function (postId, postAuthor) {
   }
 };
 
-window.doRepost = async function (postId, postAuthor) {
-  const { domain, token, repo } = getState();
-  try {
-    const id = generatePostId();
-    const post = {
-      id,
-      author: domain,
-      created_at: new Date().toISOString(),
-      text: '',
-      repost_of: postId,
-      repost_of_author: postAuthor,
-    };
-
-    const contentKey = getContentKey();
-    const postJson = new TextEncoder().encode(JSON.stringify(post));
-    const encrypted = crypto.encryptData(postJson, contentKey);
-
-    await github.pushBinaryFile(
-      token,
-      repo,
-      `posts/${id}.json.enc`,
-      encrypted
-    );
-
-    let index;
-    try {
-      index = await feed.fetchPostIndex(domain);
-    } catch {
-      index = { posts: [] };
-    }
-    index.posts.unshift(id);
-    await github.pushTextFile(
-      token,
-      repo,
-      'posts/index.json',
-      JSON.stringify(index)
-    );
-
-    await refreshFeed();
-  } catch (e) {
-    alert('Failed to repost: ' + e);
-  }
-};
 
 // --- Init ---
 

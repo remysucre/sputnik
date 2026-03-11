@@ -148,23 +148,6 @@ button:disabled {
   background: none;
 }
 
-.repost-label {
-  color: #888;
-  font-size: 0.8em;
-  margin-bottom: 6px;
-}
-
-.repost-content {
-  border-left: 2px solid #333;
-  padding-left: 12px;
-  margin-top: 6px;
-}
-
-.repost-content.unavailable {
-  color: #666;
-  font-style: italic;
-  font-size: 0.85em;
-}
 
 .reply-label {
   color: #888;

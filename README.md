@@ -112,27 +112,13 @@ A post object:
   "created_at": "2026-03-09T14:15:00Z",
   "text": "Hello, decentralized world!",
   "reply_to": null,
-  "reply_to_author": null,
-  "repost_of": null,
-  "repost_of_author": null
+  "reply_to_author": null
 }
 ```
 
 Post IDs are `{ISO8601-compact-UTC}-{4-hex-random}`, e.g. `20260309T141500Z-a1b2`.
 The timestamp prefix gives natural sort order; the random suffix prevents collisions.
 
-### Reposts
-
-A repost is a post with `repost_of` and `repost_of_author` set. The `text`
-field may be empty (pure repost) or contain commentary (quote repost).
-
-When a client encounters a repost, it fetches and decrypts the original post
-from the original author's site. This means:
-- The original content is always authenticated by the original author's TLS
-  and encryption — reposters cannot forge content.
-- If the original author deletes or edits the post, the repost reflects that.
-- If the viewer doesn't have access to the original author's data (the original
-  author doesn't follow them), they see the repost attribution without content.
 
 ## Follow List
 
