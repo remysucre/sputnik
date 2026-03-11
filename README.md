@@ -195,9 +195,9 @@ The protocol itself is agnostic to how the site is hosted,
 
 ### Quick start
 
-1. Create a new repo from the [satellite template](https://github.com/remysucre/satellite) and name it `satellite` (see [below](#using-a-custom-repo-name) if you want to use another name)
+1. Use this template repo to create a new repo named `satellite` (see [below](#using-a-custom-repo-name) if you want a different name)
 2. Enable [GitHub Pages](https://docs.github.com/en/pages/getting-started-with-github-pages/creating-a-github-pages-site) on the repo (use deploy from the `main` branch)
-3. Visit `https://yourdomain/satellite/`
+3. Visit the GitHub Pages URL (e.g. `https://username.github.io/satellite/`)
 
 ### Following someone
 
