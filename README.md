@@ -1,4 +1,21 @@
-# sAT Protocol
+## Quick start
+
+1. Fork [this repo](https://github.com/remysucre/satellite) (see below if you need a different name from `satellite`)
+2. Enable [GitHub Pages](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site#publishing-from-a-branch) on your fork (deploy from the `main` branch).
+3. Visit the GitHub Pages URL (e.g. `https://username.github.io/satellite/`)
+
+While this sample implementation uses GitHub, the protocol is agnostic to the hosting service.
+
+**Using a custom repo name**:
+by default, the client looks for data at `https://{domain}/satellite/`.
+If you name your repo something other than `satellite`, add a `satellite.json`
+file to the root of your main site (e.g. the `username.github.io` repo)
+pointing to the actual repo:
+
+```json
+{ "sat_repo": "my-custom-repo" }
+```
+## sAT Protocol
 
 sAT Protocol (`s@`) is a decentralized social networking protocol based on static sites.
 Each user owns a static website storing all their data in encrypted JSON stores.
@@ -180,34 +197,4 @@ The GitHub token is encrypted in `keys/_self.json` (see [Self Key](#self-key-key
   keys/
     _self.json              # Sealed box: content key + credentials (owner only)
     {domain}.json           # Sealed box: content key for follower
-```
-
-## Setup
-
-```
-🚧🚧 This app is meant to demonstrate the main ideas of s@    🚧🚧
-🚧🚧 and is not (yet) a robust implementation. In particular, 🚧🚧
-🚧🚧 each interaction is slow because it's literally making a 🚧🚧
-🚧🚧 commit to GitHub and waiting for the page to update.     🚧🚧
-```
-
-Below are steps to set up a sample implementation of `s@` using GitHub.
-The protocol itself is agnostic to how the site is hosted,
- and there is plan to support other hosts in the future.
-
-### Quick start
-
-1. Use this template repo to create a new repo named `satellite` (see [below](#using-a-custom-repo-name) if you want a different name)
-2. Enable [GitHub Pages](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site#publishing-from-a-branch) on the repo (deploy from the `main` branch).
-3. Visit the GitHub Pages URL (e.g. `https://username.github.io/satellite/`)
-
-### Using a custom repo name
-
-By default, the client looks for data at `https://{domain}/satellite/`.
-If you name your repo something other than `satellite`, add a `satellite.json`
-file to the root of your main site (e.g. the `username.github.io` repo)
-pointing to the actual repo:
-
-```json
-{ "sat_repo": "my-custom-repo" }
 ```
