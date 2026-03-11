@@ -75,9 +75,8 @@ async function bootstrap() {
   localStorage.setItem('satproto_content_key', crypto.toBase64(contentKey));
 
   const files = [
-    ['.nojekyll', ''],
     [
-      '.well-known/satproto.json',
+      'satproto.json',
       JSON.stringify({
         satproto_version: '0.1.0',
         handle: domain,
