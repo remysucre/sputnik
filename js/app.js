@@ -582,8 +582,8 @@ function updateTokenLink() {
   const repoName = getRepoName();
   const params = new URLSearchParams({
     name: 'Satellite',
+    description: `Select "Only select repositories" → ${repoName}, then grant Contents read/write.`,
     target_name: username,
-    contents: 'write',
   });
   link.href = `https://github.com/settings/personal-access-tokens/new?${params}`;
   link.style.display = '';
