@@ -1,0 +1,279 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+  background: #0a0a0a;
+  color: #e0e0e0;
+}
+
+header {
+  border-bottom: 1px solid #333;
+  padding-bottom: 16px;
+  margin-bottom: 20px;
+}
+
+header h1 {
+  font-size: 1.4em;
+  color: #fff;
+}
+
+header p {
+  color: #888;
+  font-size: 0.9em;
+  margin-top: 4px;
+}
+
+#setup-panel {
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+#setup-panel label {
+  display: block;
+  font-size: 0.85em;
+  color: #888;
+  margin-bottom: 4px;
+  margin-top: 12px;
+}
+
+#setup-panel label:first-child {
+  margin-top: 0;
+}
+
+#setup-panel input {
+  width: 100%;
+  padding: 8px;
+  background: #0a0a0a;
+  border: 1px solid #444;
+  border-radius: 4px;
+  color: #e0e0e0;
+  font-family: monospace;
+  font-size: 0.9em;
+}
+
+#setup-panel button {
+  margin-top: 12px;
+}
+
+#compose {
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+#compose textarea {
+  width: 100%;
+  min-height: 80px;
+  padding: 8px;
+  background: #0a0a0a;
+  border: 1px solid #444;
+  border-radius: 4px;
+  color: #e0e0e0;
+  font-family: inherit;
+  font-size: 0.95em;
+  resize: vertical;
+}
+
+button {
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-size: 0.9em;
+}
+
+button:hover {
+  background: #1d4ed8;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.post {
+  border: 1px solid #222;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 12px;
+  background: #111;
+}
+
+.post-author {
+  font-weight: 600;
+  color: #93c5fd;
+  font-size: 0.9em;
+}
+
+.post-time {
+  color: #666;
+  font-size: 0.8em;
+  margin-left: 8px;
+}
+
+.post-text {
+  margin-top: 6px;
+  line-height: 1.5;
+}
+
+.post-actions {
+  margin-top: 8px;
+  display: flex;
+  gap: 12px;
+}
+
+.post-actions button {
+  background: none;
+  color: #666;
+  padding: 2px 6px;
+  font-size: 0.8em;
+}
+
+.post-actions button:hover {
+  color: #93c5fd;
+  background: none;
+}
+
+.repost-label {
+  color: #888;
+  font-size: 0.8em;
+  margin-bottom: 6px;
+}
+
+.reply-label {
+  color: #888;
+  font-size: 0.8em;
+  margin-bottom: 6px;
+}
+
+#status {
+  color: #888;
+  font-size: 0.85em;
+  margin-bottom: 12px;
+}
+
+#public-key-display {
+  font-family: monospace;
+  font-size: 0.75em;
+  color: #666;
+  word-break: break-all;
+  margin-top: 4px;
+}
+
+#follow-panel {
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+#follow-input-row {
+  display: flex;
+  gap: 8px;
+}
+
+#follow-domain-input {
+  flex: 1;
+  padding: 8px;
+  background: #0a0a0a;
+  border: 1px solid #444;
+  border-radius: 4px;
+  color: #e0e0e0;
+  font-family: monospace;
+  font-size: 0.9em;
+}
+
+#follows-list {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.follow-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #222;
+  border: 1px solid #444;
+  border-radius: 16px;
+  padding: 4px 10px;
+  font-size: 0.85em;
+  color: #93c5fd;
+}
+
+.unfollow-btn {
+  background: none;
+  color: #666;
+  border: none;
+  padding: 0 2px;
+  font-size: 0.85em;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.unfollow-btn:hover {
+  color: #ef4444;
+  background: none;
+}
+
+.follows-empty {
+  color: #666;
+  font-size: 0.85em;
+}
+
+.device-code {
+  font-family: monospace;
+  font-size: 2em;
+  font-weight: bold;
+  text-align: center;
+  color: #fff;
+  background: #222;
+  border-radius: 8px;
+  padding: 12px;
+  margin: 8px 0;
+  letter-spacing: 4px;
+}
+
+#device-code-panel p {
+  color: #888;
+  font-size: 0.9em;
+  margin-top: 12px;
+}
+
+#setup-panel details {
+  margin-top: 12px;
+}
+
+#setup-panel summary {
+  color: #888;
+  font-size: 0.85em;
+  cursor: pointer;
+}
+
+.secondary-btn {
+  background: #333;
+  color: #888;
+  font-size: 0.8em;
+  margin-top: 10px;
+}
+
+.secondary-btn:hover {
+  background: #444;
+  color: #e0e0e0;
+}
