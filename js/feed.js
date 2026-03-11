@@ -95,9 +95,3 @@ export function mergeFeed(postArrays) {
     b.created_at.localeCompare(a.created_at)
   );
 }
-
-export function filterReplies(posts, postId, postAuthor) {
-  return posts.filter(
-    (p) => p.reply_to === postId && p.reply_to_author === postAuthor
-  );
-}

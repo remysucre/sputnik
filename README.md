@@ -146,12 +146,16 @@ The client builds a feed by:
 
 ## Replies
 
-A reply is a post with `reply_to` and `reply_to_author` set. Replies are
-aggregated the same way as regular posts. A user only sees replies from people
-they follow — this is the spam prevention mechanism.
+A reply is a post with `reply_to` and `reply_to_author` set.
+Replies are grouped as flat threads under the original post — nested replies
+(replying to a reply) are not supported; you can only reply to top-level posts.
 
-When viewing a post, the client scans followed users' posts for entries where
-`reply_to` matches the post ID and `reply_to_author` matches the post's author.
+Threads are positioned in the timeline by the original post's `created_at`;
+replies within a thread are sorted by their own `created_at` ascending.
+
+If the original post is inaccessible (e.g. the viewer doesn't follow the
+author), the reply is hidden entirely. A user only sees replies from people
+they follow — this is the spam prevention mechanism.
 
 ## Publishing
 

@@ -163,21 +163,45 @@ async function refreshFeed() {
 
     const merged = feed.mergeFeed(postArrays);
 
-    // Resolve replies: fetch parent post content
+    // Split into top-level posts and replies
+    const topLevel = [];
+    const replies = [];
     for (const post of merged) {
-      if (!post.reply_to) continue;
-      try {
-        post._ref = await feed.fetchSinglePost(
-          post.reply_to_author, post.reply_to, domain, sk
-        );
-      } catch {
-        post._ref = null;
+      if (post.reply_to) {
+        replies.push(post);
+      } else {
+        topLevel.push(post);
       }
     }
 
-    renderFeed(merged);
+    // Build a set of top-level post keys for quick lookup
+    const topLevelKeys = new Set(
+      topLevel.map((p) => p.author + '\0' + p.id)
+    );
+
+    // Group replies by parent, dropping replies to inaccessible posts
+    const replyMap = new Map();
+    for (const r of replies) {
+      const key = r.reply_to_author + '\0' + r.reply_to;
+      if (!topLevelKeys.has(key)) continue;
+      if (!replyMap.has(key)) replyMap.set(key, []);
+      replyMap.get(key).push(r);
+    }
+
+    // Sort each reply group by created_at ascending
+    for (const group of replyMap.values()) {
+      group.sort((a, b) => a.created_at.localeCompare(b.created_at));
+    }
+
+    // Attach replies to their parent
+    for (const post of topLevel) {
+      const key = post.author + '\0' + post.id;
+      post._replies = replyMap.get(key) || [];
+    }
+
+    renderFeed(topLevel);
     setStatus(
-      merged.length
+      topLevel.length
         ? ''
         : 'No posts yet. Follow someone or write your first post!'
     );
@@ -194,23 +218,22 @@ function renderFeed(posts) {
     div.className = 'post';
 
     let html = '';
-    if (post.reply_to) {
-      if (post._ref) {
-        html += `<div class="reply-parent">`;
-        html += `<span class="post-author">${escHtml(post._ref.author)}</span>`;
-        html += `<span class="post-time">${new Date(post._ref.created_at).toLocaleString()}</span>`;
-        html += `<div class="post-text">${escHtml(post._ref.text)}</div>`;
-        html += `</div>`;
-      } else {
-        html += `<div class="reply-parent unavailable">You don't have access to ${escHtml(post.reply_to_author)}'s posts — you may need to follow each other first.</div>`;
-      }
-    }
     html += `<span class="post-author">${escHtml(post.author)}</span>`;
     html += `<span class="post-time">${new Date(post.created_at).toLocaleString()}</span>`;
     html += `<div class="post-text">${escHtml(post.text)}</div>`;
     html += `<div class="post-actions">`;
     html += `<button onclick="doReply('${escAttr(post.id)}','${escAttr(post.author)}')">reply</button>`;
     html += `</div>`;
+
+    if (post._replies && post._replies.length > 0) {
+      for (const reply of post._replies) {
+        html += `<div class="reply">`;
+        html += `<span class="post-author">${escHtml(reply.author)}</span>`;
+        html += `<span class="post-time">${new Date(reply.created_at).toLocaleString()}</span>`;
+        html += `<div class="post-text">${escHtml(reply.text)}</div>`;
+        html += `</div>`;
+      }
+    }
 
     div.innerHTML = html;
     el.appendChild(div);

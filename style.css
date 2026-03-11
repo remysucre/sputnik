@@ -149,24 +149,12 @@ button:disabled {
 }
 
 
-.reply-label {
-  color: #888;
-  font-size: 0.8em;
-  margin-bottom: 6px;
-}
-
-.reply-parent {
+.reply {
   border-left: 2px solid #333;
   padding-left: 12px;
-  margin-bottom: 8px;
+  margin-top: 8px;
   font-size: 0.9em;
-  color: #999;
-}
-
-.reply-parent.unavailable {
-  color: #666;
-  font-style: italic;
-  font-size: 0.85em;
+  color: #ccc;
 }
 
 #status {
