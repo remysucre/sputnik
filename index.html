@@ -14,13 +14,12 @@
   </header>
 
   <div id="setup-panel">
-    <label for="domain-input">Your domain (without https://)</label>
-    <input type="text" id="domain-input" placeholder="you.github.io">
-    <label for="repo-input">GitHub repo (owner/repo)</label>
-    <input type="text" id="repo-input" placeholder="username/satellite">
+    <label for="username-input">GitHub username</label>
+    <input type="text" id="username-input" placeholder="username">
+    <a id="token-link" href="#" target="_blank" style="display:none;">Generate token on GitHub</a>
 
-    <label for="token-input">GitHub token (<a href="https://github.com/settings/tokens/new?scopes=public_repo&description=Satellite" target="_blank">create one</a>)</label>
-    <input type="password" id="token-input" placeholder="ghp_...">
+    <label for="token-input">GitHub token</label>
+    <input type="password" id="token-input" placeholder="github_pat_...">
 
     <button onclick="saveSetup()">Initialize (new user)</button>
 

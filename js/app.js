@@ -9,9 +9,18 @@ const DEFAULT_FEED_LIMIT = 50;
 
 // --- Helpers ---
 
+function getDomain() {
+  return window.location.hostname;
+}
+
+function getRepoName() {
+  // e.g. "/satellite/" -> "satellite"
+  return window.location.pathname.split('/').filter(Boolean)[0] || 'satellite';
+}
+
 function getState() {
   return {
-    domain: localStorage.getItem('satproto_domain'),
+    domain: getDomain(),
     repo: localStorage.getItem('satproto_github_repo'),
     token: auth.getStoredToken(),
   };
@@ -54,10 +63,7 @@ function escAttr(s) {
 function showSetup() {
   document.getElementById('setup-panel').style.display = 'block';
   document.getElementById('main-ui').style.display = 'none';
-  const { domain, repo } = getState();
-  if (domain) document.getElementById('domain-input').value = domain;
-  if (repo) document.getElementById('repo-input').value = repo;
-  setStatus('Set up your domain and sign in with GitHub.');
+  setStatus('Sign in with GitHub to get started.');
 }
 
 function showMain() {
@@ -196,17 +202,16 @@ function renderFeed(posts) {
 // --- Global handlers (called from HTML) ---
 
 window.saveSetup = async function () {
-  const domain = document.getElementById('domain-input').value.trim();
-  const repo = document.getElementById('repo-input').value.trim();
+  const username = document.getElementById('username-input').value.trim();
   const token = document.getElementById('token-input').value.trim();
-  if (!domain || !repo || !token) return alert('All fields required');
-
-  localStorage.setItem('satproto_domain', domain);
-  localStorage.setItem('satproto_github_repo', repo);
-  auth.storeToken(token);
+  if (!username || !token) return alert('Username and token are required');
 
   setStatus('Initializing your site...');
   try {
+    const repo = `${username}/${getRepoName()}`;
+    localStorage.setItem('satproto_github_repo', repo);
+    auth.storeToken(token);
+
     await bootstrap();
     showMain();
     setStatus('Ready! Write your first post or follow someone.');
@@ -216,11 +221,11 @@ window.saveSetup = async function () {
 };
 
 window.signIn = async function () {
-  const domain = document.getElementById('domain-input').value.trim();
   const sk = document.getElementById('secret-key-input').value.trim();
-  if (!domain || !sk) return alert('Domain and secret key are required');
+  if (!sk) return alert('Secret key is required');
 
   try {
+    const domain = getDomain();
     const secretKey = crypto.fromBase64(sk);
     const publicKey = crypto.derivePublicKey(secretKey);
 
@@ -233,7 +238,6 @@ window.signIn = async function () {
     const decrypted = crypto.openSealedBox(sealed, secretKey);
     const selfData = JSON.parse(new TextDecoder().decode(decrypted));
 
-    localStorage.setItem('satproto_domain', domain);
     localStorage.setItem('satproto_github_repo', selfData.repo);
     auth.storeToken(selfData.token);
     localStorage.setItem('satproto_secret_key', sk);
@@ -568,6 +572,23 @@ window.doRepost = async function (postId, postAuthor) {
 
 // --- Init ---
 
+function updateTokenLink() {
+  const username = document.getElementById('username-input').value.trim();
+  const link = document.getElementById('token-link');
+  if (!username) {
+    link.style.display = 'none';
+    return;
+  }
+  const repoName = getRepoName();
+  const params = new URLSearchParams({
+    name: 'Satellite',
+    target_name: username,
+    contents: 'write',
+  });
+  link.href = `https://github.com/settings/personal-access-tokens/new?${params}`;
+  link.style.display = '';
+}
+
 async function start() {
   await crypto.init();
 
@@ -583,8 +604,11 @@ async function start() {
   document.getElementById('public-key-display').textContent =
     `Public key: ${pk}`;
 
-  const { domain, repo, token } = getState();
-  if (domain && repo && token) {
+  document.getElementById('username-input')
+    .addEventListener('input', updateTokenLink);
+
+  const { repo, token } = getState();
+  if (repo && token) {
     showMain();
     await refreshFollows();
     await refreshFeed();
