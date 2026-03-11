@@ -162,16 +162,15 @@ async function refreshFeed() {
 
     const merged = feed.mergeFeed(postArrays);
 
-    // Resolve reposts: fetch original post content
+    // Resolve reposts and replies: fetch referenced post content
     for (const post of merged) {
-      if (!post.repost_of) continue;
+      const refAuthor = post.repost_of_author || post.reply_to_author;
+      const refId = post.repost_of || post.reply_to;
+      if (!refId) continue;
       try {
-        const original = await feed.fetchSinglePost(
-          post.repost_of_author, post.repost_of, domain, sk
-        );
-        post._original = original;
+        post._ref = await feed.fetchSinglePost(refAuthor, refId, domain, sk);
       } catch {
-        post._original = null;
+        post._ref = null;
       }
     }
 
@@ -199,19 +198,26 @@ function renderFeed(posts) {
       if (post.text) {
         html += `<div class="post-text">${escHtml(post.text)}</div>`;
       }
-      if (post._original) {
-        const orig = post._original;
+      if (post._ref) {
         html += `<div class="repost-content">`;
-        html += `<span class="post-author">${escHtml(orig.author)}</span>`;
-        html += `<span class="post-time">${new Date(orig.created_at).toLocaleString()}</span>`;
-        html += `<div class="post-text">${escHtml(orig.text)}</div>`;
+        html += `<span class="post-author">${escHtml(post._ref.author)}</span>`;
+        html += `<span class="post-time">${new Date(post._ref.created_at).toLocaleString()}</span>`;
+        html += `<div class="post-text">${escHtml(post._ref.text)}</div>`;
         html += `</div>`;
       } else {
         html += `<div class="repost-content unavailable">You don't have access to ${escHtml(post.repost_of_author)}'s posts — you may need to follow each other first.</div>`;
       }
     } else {
       if (post.reply_to) {
-        html += `<div class="reply-label">replying to ${escHtml(post.reply_to_author)}</div>`;
+        if (post._ref) {
+          html += `<div class="reply-parent">`;
+          html += `<span class="post-author">${escHtml(post._ref.author)}</span>`;
+          html += `<span class="post-time">${new Date(post._ref.created_at).toLocaleString()}</span>`;
+          html += `<div class="post-text">${escHtml(post._ref.text)}</div>`;
+          html += `</div>`;
+        } else {
+          html += `<div class="reply-parent unavailable">You don't have access to ${escHtml(post.reply_to_author)}'s posts — you may need to follow each other first.</div>`;
+        }
       }
       html += `<span class="post-author">${escHtml(post.author)}</span>`;
       html += `<span class="post-time">${new Date(post.created_at).toLocaleString()}</span>`;

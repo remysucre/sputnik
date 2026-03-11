@@ -172,6 +172,20 @@ button:disabled {
   margin-bottom: 6px;
 }
 
+.reply-parent {
+  border-left: 2px solid #333;
+  padding-left: 12px;
+  margin-bottom: 8px;
+  font-size: 0.9em;
+  color: #999;
+}
+
+.reply-parent.unavailable {
+  color: #666;
+  font-style: italic;
+  font-size: 0.85em;
+}
+
 #status {
   color: #888;
   font-size: 0.85em;
