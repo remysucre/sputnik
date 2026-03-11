@@ -38,6 +38,10 @@ header p {
   margin-bottom: 20px;
 }
 
+#setup-panel a {
+  color: #93c5fd;
+}
+
 #setup-panel label {
   display: block;
   font-size: 0.85em;
