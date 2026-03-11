@@ -183,39 +183,12 @@ function renderFeed(posts) {
 window.saveSetup = async function () {
   const domain = document.getElementById('domain-input').value.trim();
   const repo = document.getElementById('repo-input').value.trim();
-  if (!domain || !repo) return alert('Domain and repo are required');
+  const token = document.getElementById('token-input').value.trim();
+  if (!domain || !repo || !token) return alert('All fields required');
 
   localStorage.setItem('satproto_domain', domain);
   localStorage.setItem('satproto_github_repo', repo);
-
-  // Check for token - try device flow, fall back to manual
-  if (!auth.getStoredToken()) {
-    const manualToken = document.getElementById('token-input').value.trim();
-    if (manualToken) {
-      auth.storeToken(manualToken);
-    } else {
-      setStatus('Starting GitHub sign-in...');
-      try {
-        const flow = await auth.startDeviceFlow();
-        document.getElementById('device-code').textContent = flow.user_code;
-        document.getElementById('device-code-panel').style.display = 'block';
-        window.open(flow.verification_uri, '_blank');
-        setStatus(
-          `Enter code ${flow.user_code} at ${flow.verification_uri}`
-        );
-
-        const accessToken = await auth.pollForToken(
-          flow.device_code,
-          flow.interval
-        );
-        auth.storeToken(accessToken);
-        document.getElementById('device-code-panel').style.display = 'none';
-      } catch (e) {
-        setStatus('GitHub sign-in failed: ' + e.message + '. Try entering a token manually.');
-        return;
-      }
-    }
-  }
+  auth.storeToken(token);
 
   setStatus('Initializing your site...');
   try {

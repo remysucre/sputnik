@@ -19,16 +19,8 @@
     <label for="repo-input">GitHub repo (owner/repo)</label>
     <input type="text" id="repo-input" placeholder="username/satellite">
 
-    <div id="device-code-panel" style="display:none;">
-      <p>Enter this code on GitHub:</p>
-      <div id="device-code" class="device-code"></div>
-    </div>
-
-    <details>
-      <summary>Or enter a token manually</summary>
-      <label for="token-input">GitHub token</label>
-      <input type="password" id="token-input" placeholder="ghp_...">
-    </details>
+    <label for="token-input">GitHub token (<a href="https://github.com/settings/tokens/new?scopes=public_repo&description=Satellite" target="_blank">create one</a>)</label>
+    <input type="password" id="token-input" placeholder="ghp_...">
 
     <button onclick="saveSetup()">Save &amp; Initialize</button>
   </div>
