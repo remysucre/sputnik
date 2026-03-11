@@ -1,10 +1,12 @@
-// Crypto operations using libsodium (loaded via script tag as window.sodium)
+// Crypto operations using libsodium
+
+import _sodium from 'libsodium-wrappers-sumo';
 
 let sodium;
 
 export async function init() {
-  await window.sodium.ready;
-  sodium = window.sodium;
+  await _sodium.ready;
+  sodium = _sodium;
 }
 
 export function generateKeypair() {
