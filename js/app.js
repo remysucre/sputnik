@@ -256,6 +256,14 @@ window.saveSetup = async function () {
     await bootstrap();
     showMain();
     setStatus('Ready! Write your first post or follow someone.');
+
+    const sk = localStorage.getItem('satproto_secret_key');
+    if (sk && confirm('Save your secret key now — you need it to sign back in after clearing your browser cache.\n\nCopy to clipboard?')) {
+      navigator.clipboard.writeText(sk).then(
+        () => alert('Secret key copied to clipboard. Store it somewhere safe!'),
+        () => prompt('Copy your secret key:', sk)
+      );
+    }
   } catch (e) {
     setStatus('Initialization failed: ' + e);
   }
