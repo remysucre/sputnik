@@ -5,13 +5,10 @@ import * as crypto from './crypto.js';
 const DEFAULT_BASE = 'satellite';
 
 // Resolve which repo a user's data lives in, then fetch their profile.
-// Tries /satellite/ first. Falls back to /satproto.json at the root,
-// which may contain {"sat_repo": "custom-name"} pointing elsewhere.
+// Checks satellite.json at the root first (in case the user has a custom
+// repo name or an unrelated project called "satellite"), then falls back
+// to the default /satellite/ path.
 async function resolve(domain) {
-  const primary = await fetch(`https://${domain}/${DEFAULT_BASE}/satproto.json`);
-  if (primary.ok) {
-    return { profile: await primary.json(), repo: DEFAULT_BASE };
-  }
   const redirect = await fetch(`https://${domain}/satellite.json`);
   if (redirect.ok) {
     const data = await redirect.json();
@@ -21,6 +18,10 @@ async function resolve(domain) {
         return { profile: await real.json(), repo: data.sat_repo };
       }
     }
+  }
+  const fallback = await fetch(`https://${domain}/${DEFAULT_BASE}/satproto.json`);
+  if (fallback.ok) {
+    return { profile: await fallback.json(), repo: DEFAULT_BASE };
   }
   throw new Error(`Profile not found for ${domain}`);
 }
