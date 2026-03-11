@@ -69,6 +69,7 @@ function showSetup() {
 function showMain() {
   document.getElementById('setup-panel').style.display = 'none';
   document.getElementById('main-ui').style.display = 'block';
+  document.getElementById('follow-panel').style.display = 'block';
 }
 
 // --- Bootstrap ---
