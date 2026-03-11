@@ -67,14 +67,17 @@ function showMain() {
 
 // --- Bootstrap ---
 
-async function pushSelfKey(token, repo, contentKey) {
+async function pushSelfData(token, repo, contentKey) {
   const pk = crypto.fromBase64(localStorage.getItem('satproto_public_key'));
-  const sealed = crypto.sealContentKey(contentKey, pk);
+  const plaintext = new TextEncoder().encode(
+    JSON.stringify({ content_key: crypto.toBase64(contentKey), repo, token })
+  );
+  const sealed = crypto.sealBox(plaintext, pk);
   await github.pushTextFile(
     token,
     repo,
     'keys/_self.json',
-    JSON.stringify({ encrypted_key: crypto.toBase64(sealed) })
+    JSON.stringify({ sealed_data: crypto.toBase64(sealed) })
   );
 }
 
@@ -103,7 +106,7 @@ async function bootstrap() {
   for (const [path, content] of files) {
     await github.pushTextFile(token, repo, path, content);
   }
-  await pushSelfKey(token, repo, contentKey);
+  await pushSelfData(token, repo, contentKey);
   console.log('Site bootstrapped!');
 }
 
@@ -214,30 +217,28 @@ window.saveSetup = async function () {
 
 window.signIn = async function () {
   const domain = document.getElementById('domain-input').value.trim();
-  const repo = document.getElementById('repo-input').value.trim();
-  const token = document.getElementById('token-input').value.trim();
   const sk = document.getElementById('secret-key-input').value.trim();
-  if (!domain || !repo || !token || !sk)
-    return alert('All fields required');
+  if (!domain || !sk) return alert('Domain and secret key are required');
 
   try {
     const secretKey = crypto.fromBase64(sk);
     const publicKey = crypto.derivePublicKey(secretKey);
 
-    // Fetch and decrypt the content key from the site
-    const base = `https://${domain}/${repo.split('/').pop()}`;
+    // Fetch and decrypt self data from the site
+    const { base } = await feed.getSatRoot(domain);
     const resp = await fetch(`${base}/keys/_self.json`);
-    if (!resp.ok) throw new Error('Could not fetch self key — has this site been initialized?');
+    if (!resp.ok) throw new Error('Could not fetch self data — has this site been initialized?');
     const envelope = await resp.json();
-    const sealed = crypto.fromBase64(envelope.encrypted_key);
-    const contentKey = crypto.openContentKey(sealed, secretKey);
+    const sealed = crypto.fromBase64(envelope.sealed_data);
+    const decrypted = crypto.openSealedBox(sealed, secretKey);
+    const selfData = JSON.parse(new TextDecoder().decode(decrypted));
 
     localStorage.setItem('satproto_domain', domain);
-    localStorage.setItem('satproto_github_repo', repo);
-    auth.storeToken(token);
+    localStorage.setItem('satproto_github_repo', selfData.repo);
+    auth.storeToken(selfData.token);
     localStorage.setItem('satproto_secret_key', sk);
     localStorage.setItem('satproto_public_key', crypto.toBase64(publicKey));
-    localStorage.setItem('satproto_content_key', crypto.toBase64(contentKey));
+    localStorage.setItem('satproto_content_key', selfData.content_key);
 
     document.getElementById('public-key-display').textContent =
       `Public key: ${crypto.toBase64(publicKey)}`;
@@ -346,7 +347,7 @@ window.doFollow = async function () {
 
     // Encrypt our content key for them
     const contentKey = getContentKey();
-    const sealed = crypto.sealContentKey(contentKey, targetPk);
+    const sealed = crypto.sealBox(contentKey, targetPk);
     const envelope = {
       recipient: target,
       encrypted_key: crypto.toBase64(sealed),
@@ -443,7 +444,7 @@ window.doUnfollow = async function (target) {
       try {
         const profile = await feed.fetchProfile(follower);
         const pk = crypto.fromBase64(profile.public_key);
-        const sealed = crypto.sealContentKey(newContentKey, pk);
+        const sealed = crypto.sealBox(newContentKey, pk);
         const envelope = {
           recipient: follower,
           encrypted_key: crypto.toBase64(sealed),
@@ -466,7 +467,7 @@ window.doUnfollow = async function (target) {
       JSON.stringify(list)
     );
 
-    await pushSelfKey(token, repo, newContentKey);
+    await pushSelfData(token, repo, newContentKey);
 
     await refreshFollows();
     await refreshFeed();
@@ -584,18 +585,6 @@ async function start() {
 
   const { domain, repo, token } = getState();
   if (domain && repo && token) {
-    // Ensure keys/_self.json exists (migration for older installs)
-    try {
-      const base = `https://${domain}/${repo.split('/').pop()}`;
-      const resp = await fetch(`${base}/keys/_self.json`);
-      if (!resp.ok) {
-        const contentKey = getContentKey();
-        await pushSelfKey(token, repo, contentKey);
-        console.log('Pushed keys/_self.json for existing install');
-      }
-    } catch (e) {
-      console.warn('Failed to check/push self key:', e);
-    }
     showMain();
     await refreshFollows();
     await refreshFeed();

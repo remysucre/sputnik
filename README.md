@@ -66,7 +66,17 @@ Only users in the owner's follow list can decrypt it.
 - A random **content key** (256-bit symmetric key) encrypts
   post data with XChaCha20-Poly1305.
 - The content key is encrypted per-follower using libsodium sealed boxes
-  (`crypto_box_seal` with the follower's X25519 public key).
+  (`crypto_box_seal` with the follower's X25519 public key)
+  and stored at `keys/{follower-domain}.json`.
+
+### Self Key (`keys/_self.json`)
+
+The user's content key, GitHub repo, and GitHub token are bundled into
+a single sealed box (`crypto_box_seal` with the user's own public key)
+and stored at `keys/_self.json`. Only the user's private key can open it.
+
+This allows a user to sign back in on a new device or after clearing
+browser storage — they only need their domain and private key.
 
 ### Key Rotation (Unfollow)
 
@@ -74,16 +84,18 @@ When the user unfollows someone:
 1. Generate a new content key
 2. Re-encrypt all posts with the new key
 3. Re-create key envelopes for all remaining followers
-4. The unfollowed user's old key no longer decrypts anything
+4. Update `keys/_self.json` with the new content key
+5. The unfollowed user's old key no longer decrypts anything
 
 ### Decryption Flow
 
 When Bob visits Alice's site:
 1. Fetch Alice's `/satellite/satproto.json` to get her public key
 2. Fetch `keys/bob.example.com.json`
-3. Decrypt the content key using Bob's private key
+3. Decrypt the content key using Bob's private key (`crypto_box_seal_open`)
 4. Fetch `posts/index.json` to get the list of post IDs
 5. Fetch and decrypt individual posts from `posts/{id}.json.enc`
+   (XChaCha20-Poly1305 with the content key)
 
 ## Data Schema
 
@@ -163,7 +175,7 @@ The client publishes posts by:
 3. Pushing the encrypted post as `posts/{id}.json.enc` via the GitHub Contents API
 4. Updating `posts/index.json` to include the new post ID
 
-The GitHub OAuth token is stored in localStorage alongside the private key.
+The GitHub token is encrypted in `keys/_self.json` (see [Self Key](#self-key-keys_selfjson)).
 
 ## Static Site Structure
 
@@ -176,7 +188,8 @@ The GitHub OAuth token is stored in localStorage alongside the private key.
   follows/
     index.json              # Follow list (unencrypted)
   keys/
-    {domain}.json           # Encrypted content key per follower
+    _self.json              # Sealed box: content key + credentials (owner only)
+    {domain}.json           # Sealed box: content key for follower
 ```
 
 ## Setup

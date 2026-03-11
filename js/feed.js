@@ -32,7 +32,7 @@ export async function fetchProfile(domain) {
 }
 
 // Get the base URL for a user's sat data (e.g. "https://alice.com/satellite")
-async function getSatRoot(domain) {
+export async function getSatRoot(domain) {
   const { profile, repo } = await resolve(domain);
   return { base: `https://${domain}/${repo}`, profile };
 }
@@ -56,7 +56,7 @@ async function fetchKeyEnvelope(satBase, myDomain, mySecret) {
   if (!resp.ok) throw new Error(`No key envelope for ${myDomain}`);
   const envelope = await resp.json();
   const sealed = crypto.fromBase64(envelope.encrypted_key);
-  return crypto.openContentKey(sealed, mySecret);
+  return crypto.openSealedBox(sealed, mySecret);
 }
 
 async function fetchPost(satBase, postId, contentKey) {

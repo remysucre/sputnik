@@ -22,11 +22,11 @@ export function generateContentKey() {
   return sodium.randombytes_buf(32);
 }
 
-export function sealContentKey(contentKey, recipientPk) {
-  return sodium.crypto_box_seal(contentKey, recipientPk);
+export function sealBox(plaintext, recipientPk) {
+  return sodium.crypto_box_seal(plaintext, recipientPk);
 }
 
-export function openContentKey(sealed, sk) {
+export function openSealedBox(sealed, sk) {
   const pk = sodium.crypto_scalarmult_base(sk);
   return sodium.crypto_box_seal_open(sealed, pk, sk);
 }
