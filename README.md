@@ -195,7 +195,7 @@ The protocol itself is agnostic to how the site is hosted,
 ### Quick start
 
 1. Use this template repo to create a new repo named `satellite` (see [below](#using-a-custom-repo-name) if you want a different name)
-2. Enable [GitHub Pages](https://docs.github.com/en/pages/getting-started-with-github-pages/creating-a-github-pages-site) on the repo (use deploy from the `main` branch)
+2. Enable [GitHub Pages](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site#publishing-from-a-branch) on the repo (deploy from the `main` branch).
 3. Visit the GitHub Pages URL (e.g. `https://username.github.io/satellite/`)
 
 ### Using a custom repo name

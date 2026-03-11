@@ -22,7 +22,14 @@
     <label for="token-input">GitHub token (<a href="https://github.com/settings/tokens/new?scopes=public_repo&description=Satellite" target="_blank">create one</a>)</label>
     <input type="password" id="token-input" placeholder="ghp_...">
 
-    <button onclick="saveSetup()">Save &amp; Initialize</button>
+    <button onclick="saveSetup()">Initialize (new user)</button>
+
+    <details id="signin-details">
+      <summary>Sign in (returning user)</summary>
+      <label for="secret-key-input">Secret key</label>
+      <input type="password" id="secret-key-input" placeholder="base64-encoded secret key">
+      <button onclick="signIn()">Sign In</button>
+    </details>
   </div>
 
   <div id="main-ui" style="display:none;">
@@ -37,6 +44,7 @@
         <button onclick="doFollow()" id="follow-btn">Follow</button>
       </div>
       <div id="follows-list"></div>
+      <button onclick="exportKeys()" id="export-btn" class="secondary-btn">Export keys</button>
       <button onclick="reinitialize()" id="reinit-btn" class="secondary-btn">Re-initialize site</button>
     </div>
   </div>

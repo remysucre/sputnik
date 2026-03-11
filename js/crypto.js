@@ -14,6 +14,10 @@ export function generateKeypair() {
   return { publicKey: kp.publicKey, secretKey: kp.privateKey };
 }
 
+export function derivePublicKey(sk) {
+  return sodium.crypto_scalarmult_base(sk);
+}
+
 export function generateContentKey() {
   return sodium.randombytes_buf(32);
 }
