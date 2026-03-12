@@ -2,14 +2,25 @@
 
 import * as crypto from './crypto.js';
 
-// Get the base URL for a user's sat data (e.g. "https://alice.com/satellite").
-// Checks for a /satproto_root symlink first (in case the user already has an
-// unrelated /satellite/ path), then falls back to /satellite/.
+const DEFAULT_BASE = 'satellite';
+
+// Resolve which repo a user's data lives in.
+// Checks satproto_root.json at the domain root first (in case the user has a
+// custom repo name or an unrelated project called "satellite"), then falls
+// back to the default /satellite/ path.
+async function resolveBase(domain) {
+  const resp = await fetch(`https://${domain}/satproto_root.json`);
+  if (resp.ok) {
+    const data = await resp.json();
+    if (data.sat_root) return data.sat_root;
+  }
+  return DEFAULT_BASE;
+}
+
+// Get the base URL for a user's sat data (e.g. "https://alice.com/satellite")
 export async function getSatBase(domain) {
-  const root = `https://${domain}/satproto_root`;
-  const probe = await fetch(`${root}/satproto.json`, { method: 'HEAD' });
-  if (probe.ok) return root;
-  return `https://${domain}/satellite`;
+  const base = await resolveBase(domain);
+  return `https://${domain}/${base}`;
 }
 
 export async function fetchProfile(domain) {
