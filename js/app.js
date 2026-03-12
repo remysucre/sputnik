@@ -460,10 +460,11 @@ window.doUnfollow = async function (target) {
     localStorage.setItem('satproto_content_key', crypto.toBase64(newContentKey));
 
     // Re-encrypt each post
+    const satBase = await feed.getSatBase(domain);
     for (const postId of index.posts) {
       try {
         const resp = await fetch(
-          `https://${domain}/${repo}/posts/${postId}.json.enc`
+          `${satBase}/posts/${postId}.json.enc`
         );
         if (!resp.ok) continue;
         const encrypted = new Uint8Array(await resp.arrayBuffer());
