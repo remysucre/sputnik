@@ -100,9 +100,6 @@ async function bootstrap() {
       'satproto.json',
       JSON.stringify({
         satproto_version: '0.1.0',
-        handle: domain,
-        display_name: domain,
-        bio: '',
         public_key: pk,
       }),
     ],
@@ -256,6 +253,14 @@ window.saveSetup = async function () {
     await bootstrap();
     showMain();
     setStatus('Ready! Write your first post or follow someone.');
+
+    const sk = localStorage.getItem('satproto_secret_key');
+    if (sk && confirm('Save your secret key now — you need it to sign back in after clearing your browser cache.\n\nCopy to clipboard?')) {
+      navigator.clipboard.writeText(sk).then(
+        () => alert('Secret key copied to clipboard. Store it somewhere safe!'),
+        () => prompt('Copy your secret key:', sk)
+      );
+    }
   } catch (e) {
     setStatus('Initialization failed: ' + e);
   }
@@ -271,7 +276,7 @@ window.signIn = async function () {
     const publicKey = crypto.derivePublicKey(secretKey);
 
     // Fetch and decrypt self data from the site
-    const { base } = await feed.getSatRoot(domain);
+    const base = await feed.getSatBase(domain);
     const resp = await fetch(`${base}/keys/_self.json`);
     if (!resp.ok) throw new Error('Could not fetch self data — has this site been initialized?');
     const envelope = await resp.json();
