@@ -202,15 +202,19 @@ Any secrets needed for publishing (e.g. GitHub token)
 
 > Is this just RSS + encryption?
 
-Yes.
+Yes!
 
 > Is this just [AT Protocol](https://atproto.com) but no firehose?
 
-Yes.
+Yes!
+
+> Does this scale?
+
+No! Neither does friendship. 
 
 > Does the "s" also stand for "slow" and "shitty"?
 
-Absolutely, I was this close 🤏 to naming it shAT Protocol (self-hosted AT).
+Absolutely!
 
 > Wait so I can self-host this?
 
