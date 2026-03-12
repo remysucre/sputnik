@@ -197,3 +197,21 @@ Any secrets needed for publishing (e.g. GitHub token)
     _self.json              # Sealed box: content key + credentials (owner only)
     {domain}.json           # Sealed box: content key for follower
 ```
+
+## FAQ
+
+> Is this just RSS + encryption?
+
+Yes.
+
+> Is this just [AT Protocol](https://atproto.com) but no firehose?
+
+Yes.
+
+> Does the "s" also stand for "slow" and "shitty"?
+
+Absolutely, I was this close 🤏 to naming it shAT Protocol (self-hosted AT).
+
+> Wait so I can self-host this?
+
+Yes, you'll need to enable [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS).
