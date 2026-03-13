@@ -58,6 +58,31 @@ function escAttr(s) {
   return (s || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
 }
 
+// --- Pending post cache (optimistic UI) ---
+
+const PENDING_KEY = 'satproto_pending_posts';
+
+function savePendingPost(post) {
+  const pending = getPendingPosts();
+  pending.push({ ...post, _pending: true });
+  localStorage.setItem(PENDING_KEY, JSON.stringify(pending));
+}
+
+function getPendingPosts() {
+  try {
+    return JSON.parse(localStorage.getItem(PENDING_KEY) || '[]');
+  } catch {
+    return [];
+  }
+}
+
+function clearSyncedPosts(remoteIds) {
+  const pending = getPendingPosts();
+  const remaining = pending.filter((p) => !remoteIds.has(p.id));
+  localStorage.setItem(PENDING_KEY, JSON.stringify(remaining));
+  return remaining;
+}
+
 // --- UI ---
 
 function showSetup() {
@@ -149,6 +174,13 @@ async function refreshFeed() {
       }
     }
 
+    // Clear synced pending posts and merge remaining ones
+    const remoteIds = new Set(postArrays.flat().map((p) => p.id));
+    const pendingPosts = clearSyncedPosts(remoteIds);
+    if (pendingPosts.length > 0) {
+      postArrays.push(pendingPosts);
+    }
+
     const merged = feed.mergeFeed(postArrays);
 
     // Split into top-level posts and replies
@@ -205,8 +237,13 @@ function renderFeed(posts) {
     const div = document.createElement('div');
     div.className = 'post';
 
+    if (post._pending) div.classList.add('post-pending');
+
     let html = '';
     html += `<span class="post-author">${escHtml(post.author)}</span>`;
+    if (post._pending) {
+      html += `<span class="post-pending-label">syncing…</span>`;
+    }
     html += `<span class="post-time">${new Date(post.created_at).toLocaleString()}</span>`;
     html += `<div class="post-text">${escHtml(post.text)}</div>`;
     html += `<div class="post-actions">`;
@@ -215,8 +252,11 @@ function renderFeed(posts) {
 
     if (post._replies && post._replies.length > 0) {
       for (const reply of post._replies) {
-        html += `<div class="reply">`;
+        html += `<div class="reply${reply._pending ? ' post-pending' : ''}">`;
         html += `<span class="post-author">${escHtml(reply.author)}</span>`;
+        if (reply._pending) {
+          html += `<span class="post-pending-label">syncing…</span>`;
+        }
         html += `<span class="post-time">${new Date(reply.created_at).toLocaleString()}</span>`;
         html += `<div class="post-text">${escHtml(reply.text)}</div>`;
         html += `</div>`;
@@ -355,6 +395,7 @@ window.submitPost = async function () {
     ], `new post: ${id}`);
 
     document.getElementById('post-text').value = '';
+    savePendingPost(post);
     await refreshFeed();
   } catch (e) {
     alert('Failed to post: ' + e);
@@ -522,6 +563,7 @@ window.doReply = async function (postId, postAuthor) {
       github.textEntry('posts/index.json', JSON.stringify(index)),
     ], `reply: ${id}`);
 
+    savePendingPost(post);
     await refreshFeed();
   } catch (e) {
     alert('Failed to reply: ' + e);
