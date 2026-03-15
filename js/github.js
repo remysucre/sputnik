@@ -87,25 +87,3 @@ export async function pushFiles(token, repo, files, message) {
 
   await commitAndPush(api, headers, (await treeResp.json()).sha, baseSha, message);
 }
-
-// Replace the entire repo tree with only the given files, deleting everything else.
-export async function replaceAllFiles(token, repo, files, message) {
-  const api = `https://api.github.com/repos/${repo}`;
-  const headers = ghHeaders(token);
-
-  const refResp = await fetch(`${api}/git/ref/heads/main`, { headers });
-  if (!refResp.ok) throw new Error('Failed to get branch ref');
-  const baseSha = (await refResp.json()).object.sha;
-
-  const tree = await createBlobs(api, headers, files);
-
-  // No base_tree — new tree contains only the specified files
-  const treeResp = await fetch(`${api}/git/trees`, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({ tree }),
-  });
-  if (!treeResp.ok) throw new Error('Failed to create tree');
-
-  await commitAndPush(api, headers, (await treeResp.json()).sha, baseSha, message);
-}
