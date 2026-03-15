@@ -76,15 +76,23 @@ export async function fetchUserPosts(domain, myDomain, mySecret, limit = 50) {
   }
   return posts;
 }
-
-export async function fetchSinglePost(domain, postId, myDomain, mySecret) {
-  const base = await getSatBase(domain);
-  const contentKey = await fetchKeyEnvelope(base, myDomain, mySecret);
-  return fetchPost(base, postId, contentKey);
-}
-
 export function mergeFeed(postArrays) {
   return postArrays.flat().sort((a, b) =>
     b.created_at.localeCompare(a.created_at)
   );
+}
+
+export async function fetchPostIndexOrEmpty(domain) {
+  try { return await fetchPostIndex(domain); } catch { return { posts: [] }; }
+}
+
+export async function fetchFollowListOrEmpty(domain) {
+  try { return await fetchFollowList(domain); } catch { return { follows: [] }; }
+}
+
+export async function fetchSelfData(domain) {
+  const base = await getSatBase(domain);
+  const resp = await fetch(`${base}/keys/_self.json`);
+  if (!resp.ok) throw new Error('Could not fetch self data — has this site been initialized?');
+  return resp.json();
 }

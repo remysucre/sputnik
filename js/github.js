@@ -25,24 +25,15 @@ export function binaryEntry(path, data) {
   return { path, content: uint8ToBase64(new Uint8Array(data)) };
 }
 
-// Push multiple files in a single commit using the Git Data API.
-// files: array of { path, content (base64) }
-export async function pushFiles(token, repo, files, message) {
-  const api = `https://api.github.com/repos/${repo}`;
-  const headers = ghHeaders(token);
+// Returns the authenticated user's login for the given token.
+export async function getAuthenticatedUser(token) {
+  const resp = await fetch('https://api.github.com/user', { headers: ghHeaders(token) });
+  if (!resp.ok) throw new Error('Invalid token or unable to fetch GitHub user');
+  return (await resp.json()).login;
+}
 
-  // 1. Get current commit SHA on the default branch
-  const refResp = await fetch(`${api}/git/ref/heads/main`, { headers });
-  if (!refResp.ok) throw new Error('Failed to get branch ref');
-  const baseSha = (await refResp.json()).object.sha;
-
-  // 2. Get the tree SHA of the base commit
-  const commitResp = await fetch(`${api}/git/commits/${baseSha}`, { headers });
-  if (!commitResp.ok) throw new Error('Failed to get base commit');
-  const baseTreeSha = (await commitResp.json()).tree.sha;
-
-  // 3. Create blobs for each file in parallel
-  const tree = await Promise.all(
+async function createBlobs(api, headers, files) {
+  return Promise.all(
     files.map(async (f) => {
       const blobResp = await fetch(`${api}/git/blobs`, {
         method: 'POST',
@@ -50,38 +41,71 @@ export async function pushFiles(token, repo, files, message) {
         body: JSON.stringify({ content: f.content, encoding: 'base64' }),
       });
       if (!blobResp.ok) throw new Error(`Failed to create blob for ${f.path}`);
-      return {
-        path: f.path,
-        mode: '100644',
-        type: 'blob',
-        sha: (await blobResp.json()).sha,
-      };
+      return { path: f.path, mode: '100644', type: 'blob', sha: (await blobResp.json()).sha };
     })
   );
+}
 
-  // 4. Create a new tree
+async function commitAndPush(api, headers, treeSha, parentSha, message) {
+  const commitResp = await fetch(`${api}/git/commits`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ message, tree: treeSha, parents: [parentSha] }),
+  });
+  if (!commitResp.ok) throw new Error('Failed to create commit');
+  const commitSha = (await commitResp.json()).sha;
+
+  const updateResp = await fetch(`${api}/git/refs/heads/main`, {
+    method: 'PATCH',
+    headers,
+    body: JSON.stringify({ sha: commitSha }),
+  });
+  if (!updateResp.ok) throw new Error('Failed to update branch ref');
+}
+
+// Push multiple files in a single commit, merging into the existing tree.
+export async function pushFiles(token, repo, files, message) {
+  const api = `https://api.github.com/repos/${repo}`;
+  const headers = ghHeaders(token);
+
+  const refResp = await fetch(`${api}/git/ref/heads/main`, { headers });
+  if (!refResp.ok) throw new Error('Failed to get branch ref');
+  const baseSha = (await refResp.json()).object.sha;
+
+  const commitResp = await fetch(`${api}/git/commits/${baseSha}`, { headers });
+  if (!commitResp.ok) throw new Error('Failed to get base commit');
+  const baseTreeSha = (await commitResp.json()).tree.sha;
+
+  const tree = await createBlobs(api, headers, files);
+
   const treeResp = await fetch(`${api}/git/trees`, {
     method: 'POST',
     headers,
     body: JSON.stringify({ base_tree: baseTreeSha, tree }),
   });
   if (!treeResp.ok) throw new Error('Failed to create tree');
-  const treeSha = (await treeResp.json()).sha;
 
-  // 5. Create a new commit
-  const newCommitResp = await fetch(`${api}/git/commits`, {
+  await commitAndPush(api, headers, (await treeResp.json()).sha, baseSha, message);
+}
+
+// Replace the entire repo tree with only the given files, deleting everything else.
+export async function replaceAllFiles(token, repo, files, message) {
+  const api = `https://api.github.com/repos/${repo}`;
+  const headers = ghHeaders(token);
+
+  const refResp = await fetch(`${api}/git/ref/heads/main`, { headers });
+  if (!refResp.ok) throw new Error('Failed to get branch ref');
+  const baseSha = (await refResp.json()).object.sha;
+
+  const tree = await createBlobs(api, headers, files);
+
+  // No base_tree — new tree contains only the specified files
+  const treeResp = await fetch(`${api}/git/trees`, {
     method: 'POST',
     headers,
-    body: JSON.stringify({ message, tree: treeSha, parents: [baseSha] }),
+    body: JSON.stringify({ tree }),
   });
-  if (!newCommitResp.ok) throw new Error('Failed to create commit');
-  const newCommitSha = (await newCommitResp.json()).sha;
+  if (!treeResp.ok) throw new Error('Failed to create tree');
 
-  // 6. Update the branch reference
-  const updateResp = await fetch(`${api}/git/refs/heads/main`, {
-    method: 'PATCH',
-    headers,
-    body: JSON.stringify({ sha: newCommitSha }),
-  });
-  if (!updateResp.ok) throw new Error('Failed to update branch ref');
+  await commitAndPush(api, headers, (await treeResp.json()).sha, baseSha, message);
 }
